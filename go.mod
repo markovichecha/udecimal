@@ -1,9 +1,10 @@
-module github.com/quagmt/udecimal
+module github.com/markovichecha/udecimal
 
 go 1.23
 
 require (
 	github.com/ericlagergren/decimal v0.0.0-20240411145413-00de7ca16731
+	github.com/quagmt/udecimal v1.8.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.9.0
 )
