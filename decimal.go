@@ -570,6 +570,15 @@ func (d Decimal) Div(e Decimal) (Decimal, error) {
 	return newDecimal(neg, bintFromBigInt(dBig), defaultPrec), nil
 }
 
+func (d Decimal) MustDiv(e Decimal) Decimal {
+	res, err := d.Div(e)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}
+
 func tryDivU128(d, e Decimal, neg bool) (Decimal, error) {
 	if d.coef.overflow() || e.coef.overflow() {
 		return Decimal{}, errOverflow
@@ -617,6 +626,15 @@ func (d Decimal) Div64(v uint64) (Decimal, error) {
 	dBig.Div(dBig, new(big.Int).SetUint64(v))
 
 	return newDecimal(d.neg, bintFromBigInt(dBig), defaultPrec), nil
+}
+
+func (d Decimal) MustDiv64(v uint64) Decimal {
+	res, err := d.Div64(v)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
 }
 
 // QuoRem returns q and r where
@@ -1641,6 +1659,15 @@ func (d Decimal) Sqrt() (Decimal, error) {
 	factor := 2*defaultPrec - d.prec
 	coef := dBig.Mul(dBig, pow10[factor].ToBigInt())
 	return newDecimal(false, bintFromBigInt(coef.Sqrt(coef)), defaultPrec), nil
+}
+
+func (d Decimal) MustSqrt() Decimal {
+	res, err := d.Sqrt()
+	if err != nil {
+		panic(err)
+	}
+
+	return res
 }
 
 func (d Decimal) sqrtU128() (Decimal, error) {
