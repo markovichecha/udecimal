@@ -878,6 +878,73 @@ func (d Decimal) rescale(prec uint8) Decimal {
 	return Decimal{neg: dTrim.neg, coef: coef, prec: prec}
 }
 
+// ShiftPointLeft shifts the decimal point left by n positions.
+// This is equivalent to multiplying the number by 10^n.
+// For example, 123.45.ShiftPointLeft(2) returns 12345
+//
+// If n is 0, returns the original decimal.
+func (d Decimal) ShiftPointLeft(n uint8) Decimal {
+	if n == 0 {
+		return d
+	}
+
+	if n <= d.prec {
+		// Simple case: just reduce precision
+		return newDecimal(d.neg, d.coef, d.prec-n)
+	}
+
+	// Need to multiply coefficient by 10^(n-prec) and set precision to 0
+	extraShift := n - d.prec
+
+	if extraShift >= 39 {
+		// Handle very large shifts with big integers
+		dBig := d.coef.GetBig()
+		for i := uint8(0); i < extraShift; i++ {
+			dBig.Mul(dBig, pow10Big[1])
+		}
+		return newDecimal(d.neg, bintFromBigInt(dBig), 0)
+	}
+
+	// For shifts within our pow10 table
+	var newCoef bint
+	if d.coef.overflow() {
+		dBig := d.coef.GetBig()
+		dBig.Mul(dBig, pow10[extraShift].ToBigInt())
+		newCoef = bintFromBigInt(dBig)
+	} else {
+		newU128, err := d.coef.u128.Mul(pow10[extraShift])
+		if err != nil {
+			// Overflow occurred, use big integers
+			dBig := d.coef.GetBig()
+			dBig.Mul(dBig, pow10[extraShift].ToBigInt())
+			newCoef = bintFromBigInt(dBig)
+		} else {
+			newCoef = bintFromU128(newU128)
+		}
+	}
+
+	return newDecimal(d.neg, newCoef, 0)
+}
+
+// ShiftPointRight shifts the decimal point right by n positions.
+// This is equivalent to dividing the number by 10^n.
+// For example, 123.45.ShiftPointRight(2) returns 1.2345
+//
+// If n is 0, returns the original decimal.
+// If n would cause the precision to exceed maxPrec, the result is clamped to maxPrec.
+func (d Decimal) ShiftPointRight(n uint8) Decimal {
+	if n == 0 {
+		return d
+	}
+
+	newPrec := d.prec + n
+	if newPrec > maxPrec {
+		newPrec = maxPrec
+	}
+
+	return newDecimal(d.neg, d.coef, newPrec)
+}
+
 // Neg returns -d
 func (d Decimal) Neg() Decimal {
 	return newDecimal(!d.neg, d.coef, d.prec)
