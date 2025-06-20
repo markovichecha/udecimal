@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/quagmt/udecimal"
+	"github.com/markovichecha/udecimal"
 
 	ed "github.com/ericlagergren/decimal"
 	ss "github.com/shopspring/decimal"

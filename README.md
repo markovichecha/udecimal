@@ -1,9 +1,9 @@
 # udecimal
 
-[![build](https://github.com/quagmt/udecimal/actions/workflows/test.yaml/badge.svg)](https://github.com/quagmt/udecimal/actions/workflows/test.yaml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/quagmt/udecimal)](https://goreportcard.com/report/github.com/quagmt/udecimal)
+[![build](https://github.com/markovichecha/udecimal/actions/workflows/test.yaml/badge.svg)](https://github.com/markovichecha/udecimal/actions/workflows/test.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/markovichecha/udecimal)](https://goreportcard.com/report/github.com/markovichecha/udecimal)
 [![codecov](https://codecov.io/gh/quagmt/udecimal/graph/badge.svg?token=662ET843EZ)](https://codecov.io/gh/quagmt/udecimal)
-[![GoDoc](https://pkg.go.dev/badge/github.com/quagmt/udecimal)](https://pkg.go.dev/github.com/quagmt/udecimal)
+[![GoDoc](https://pkg.go.dev/badge/github.com/markovichecha/udecimal)](https://pkg.go.dev/github.com/markovichecha/udecimal)
 [![Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go#financial)
 
 High performance, high precision, zero allocation fixed-point decimal number for financial applications.
@@ -13,7 +13,7 @@ High performance, high precision, zero allocation fixed-point decimal number for
 Supported version: Go >= 1.23
 
 ```sh
-go get github.com/quagmt/udecimal
+go get github.com/markovichecha/udecimal
 ```
 
 ## Features
@@ -31,7 +31,7 @@ go get github.com/quagmt/udecimal
 
 ## Documentation
 
-- Checkout [documentation](https://pkg.go.dev/github.com/quagmt/udecimal) for more information.
+- Checkout [documentation](https://pkg.go.dev/github.com/markovichecha/udecimal) for more information.
 
 ## Usage
 
@@ -41,7 +41,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/quagmt/udecimal"
+	"github.com/markovichecha/udecimal"
 )
 
 func main() {
@@ -103,7 +103,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/quagmt/udecimal"
+	"github.com/markovichecha/udecimal"
 )
 
 func main() {

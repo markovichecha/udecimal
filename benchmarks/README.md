@@ -11,7 +11,7 @@ This section provides benchmarks for the `udecimal` library in comparision with 
 ```powershell
 goos: linux
 goarch: amd64
-pkg: github.com/quagmt/udecimal/benchmarks
+pkg: github.com/markovichecha/udecimal/benchmarks
 cpu: Intel(R) Core(TM) i9-14900HX
 ```
 

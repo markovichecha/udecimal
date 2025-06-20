@@ -1,6 +1,6 @@
 goos: linux
 goarch: amd64
-pkg: github.com/quagmt/udecimal/benchmarks
+pkg: github.com/markovichecha/udecimal/benchmarks
 cpu: Intel(R) Core(TM) i9-14900HX
 BenchmarkParse/1234567890123456789.1234567890123456879-32         	 2606353	       435.7 ns/op	     160 B/op	       4 allocs/op
 BenchmarkParse/1234567890123456789.1234567890123456879-32         	 2607085	       423.7 ns/op	     160 B/op	       4 allocs/op
@@ -613,4 +613,4 @@ BenchmarkUnmarshalJSON/12345678901234567891234567890123456789.123456789012345687
 BenchmarkUnmarshalJSON/12345678901234567891234567890123456789.1234567890123456879-32                         	 2422688	       501.7 ns/op	     344 B/op	       7 allocs/op
 BenchmarkUnmarshalJSON/12345678901234567891234567890123456789.1234567890123456879-32                         	 2398424	       491.4 ns/op	     344 B/op	       7 allocs/op
 PASS
-ok  	github.com/quagmt/udecimal/benchmarks	870.261s
+ok  	github.com/markovichecha/udecimal/benchmarks	870.261s

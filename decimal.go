@@ -1429,7 +1429,7 @@ func (d Decimal) PowToIntPart(e Decimal) (Decimal, error) {
 
 // Deprecated: Use [PowInt32] instead for correct handling of 0^0 and negative exponents.
 // This function treats 0 raised to any power as 0, which may not align with mathematical conventions
-// but is practical in certain cases. See: https://github.com/quagmt/udecimal/issues/25.
+// but is practical in certain cases. See: https://github.com/markovichecha/udecimal/issues/25.
 //
 // PowInt raises the decimal d to the integer power e (d^e).
 //
