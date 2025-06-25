@@ -32,6 +32,7 @@ func TestPowFastInt32(t *testing.T) {
 		{"-0.5", 3, "0.125", nil},
 		{"-0.5", 4, "0.0625", nil},
 		{"1.000001", 1000000, "", errOverflow},
+		{"1.01", 1293, "0.000002585", errOverflow},
 	}
 
 	for _, tc := range testcases {
