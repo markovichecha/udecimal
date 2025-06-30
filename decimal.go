@@ -325,6 +325,10 @@ func Parse(s string) (Decimal, error) {
 	return parseBytes(unsafeStringToBytes(s))
 }
 
+func ParseBytes(b []byte) (Decimal, error) {
+	return parseBytes(b)
+}
+
 func parseBytes(b []byte) (Decimal, error) {
 	neg, bint, prec, err := parseBint(b)
 	if err != nil {
@@ -337,6 +341,15 @@ func parseBytes(b []byte) (Decimal, error) {
 // MustParse similars to Parse, but pacnis instead of returning error.
 func MustParse(s string) Decimal {
 	d, err := Parse(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return d
+}
+
+func MustParseBytes(b []byte) Decimal {
+	d, err := ParseBytes(b)
 	if err != nil {
 		panic(err)
 	}
