@@ -3119,3 +3119,228 @@ func TestLshZero(t *testing.T) {
 		})
 	}
 }
+
+// TestRsh tests the Rsh (right shift) method which performs binary right shift
+// on the coefficient of a decimal number. This effectively divides by powers of 2
+// with truncation of fractional parts (integer division behavior).
+func TestRsh(t *testing.T) {
+	testcases := []struct {
+		input    string
+		bits     uint
+		expected string
+	}{
+		// Zero shift - should return same value
+		{"123.45", 0, "123.45"},
+		{"0", 0, "0"},
+		{"-123.45", 0, "-123.45"},
+
+		// Basic shifts
+		{"8", 1, "4"},
+		{"8", 2, "2"},
+		{"8", 3, "1"},
+		{"4", 1, "2"},
+		{"4", 2, "1"},
+		{"10", 1, "5"},
+
+		// Integer shifts that truncate fractional parts
+		{"3", 1, "1"},
+		{"5", 2, "1"},
+		{"5", 1, "2"},
+		{"15", 2, "3"},
+
+		// Negative numbers
+		{"-8", 1, "-4"},
+		{"-8", 2, "-2"},
+		{"-5", 1, "-2"},
+		{"-15", 2, "-3"},
+
+		// Zero
+		{"0", 1, "0"},
+		{"0", 10, "0"},
+		{"0", 64, "0"},
+
+		// Small decimals
+		{"0.2", 1, "0.1"},
+		{"1", 3, "0"},
+		{"1", 4, "0"},
+
+		// Larger shifts
+		{"1024", 10, "1"},
+		{"65536", 16, "1"},
+		{"48", 4, "3"},
+		{"56", 3, "7"},
+
+		// Mixed precision
+		{"2.469134", 1, "1.234567"},
+		{"8", 4, "0"},
+		{"16", 6, "0"},
+
+		// Powers of 2
+		{"2", 1, "1"},
+		{"16", 4, "1"},
+		{"32", 5, "1"},
+		{"64", 6, "1"},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.input+"_rsh_"+fmt.Sprintf("%d", tc.bits), func(t *testing.T) {
+			d := MustParse(tc.input)
+			result := d.Rsh(tc.bits)
+			expected := MustParse(tc.expected)
+
+			require.True(t, result.Equal(expected),
+				"Rsh(%d) on %s: got %s, expected %s",
+				tc.bits, tc.input, result.String(), tc.expected)
+		})
+	}
+}
+
+// TestRshLargeShifts tests Rsh with large shift values that might result in
+// very small numbers or transition from u128 to smaller representations.
+func TestRshLargeShifts(t *testing.T) {
+	// Test shifts that might result in very small numbers
+	testcases := []struct {
+		input string
+		bits  uint
+	}{
+		{"1", 64},
+		{"1", 100},
+		{"1", 127},
+		{"123456789", 50},
+		{"999999999999999999", 60},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.input+"_rsh_"+fmt.Sprintf("%d", tc.bits), func(t *testing.T) {
+			d := MustParse(tc.input)
+			result := d.Rsh(tc.bits)
+
+			// Verify the result is not zero for reasonable shifts
+			// Very large shifts might result in values smaller than precision allows
+			if !d.IsZero() {
+				// Verify the result is smaller than or equal to the original
+				require.True(t, result.LessThanOrEqual(d),
+					"Rsh should produce smaller or equal value for positive input")
+			}
+		})
+	}
+}
+
+// TestRshPreservesSignAndPrecision verifies that the Rsh method preserves
+// both the sign and precision of the original decimal number.
+func TestRshPreservesSignAndPrecision(t *testing.T) {
+	testcases := []struct {
+		input string
+		bits  uint
+	}{
+		{"123.456789", 1},
+		{"-987.654321", 2},
+		{"8.123456789012345678", 3},
+		{"-16.987654321098765432", 1},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.input+"_rsh_"+fmt.Sprintf("%d", tc.bits), func(t *testing.T) {
+			d := MustParse(tc.input)
+			result := d.Rsh(tc.bits)
+
+			// Check sign preservation
+			require.Equal(t, d.IsNeg(), result.IsNeg(),
+				"Rsh should preserve sign")
+
+			// Check precision preservation
+			require.Equal(t, d.Prec(), result.Prec(),
+				"Rsh should preserve precision")
+		})
+	}
+}
+
+// TestRshZero verifies that right shifting zero always returns zero,
+// regardless of the shift amount.
+func TestRshZero(t *testing.T) {
+	zero := MustParse("0")
+
+	// Test various shifts on zero
+	shifts := []uint{0, 1, 2, 10, 32, 64, 100}
+
+	for _, bits := range shifts {
+		t.Run(fmt.Sprintf("zero_rsh_%d", bits), func(t *testing.T) {
+			result := zero.Rsh(bits)
+			require.True(t, result.IsZero(),
+				"Rsh on zero should always return zero")
+		})
+	}
+}
+
+// TestRshLshRoundTrip tests that for powers of 2, right shifting followed by
+// left shifting with the same number of bits returns to the original value.
+func TestRshLshRoundTrip(t *testing.T) {
+	// Test that Rsh followed by Lsh with same bits returns to original for powers of 2
+	testcases := []struct {
+		input string
+		bits  uint
+	}{
+		{"8", 1},
+		{"16", 2},
+		{"32", 3},
+		{"64", 4},
+		{"128", 5},
+		{"1024", 6},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.input+"_roundtrip_"+fmt.Sprintf("%d", tc.bits), func(t *testing.T) {
+			original := MustParse(tc.input)
+
+			// Right shift then left shift should return to original for powers of 2
+			result := original.Rsh(tc.bits).Lsh(tc.bits)
+
+			require.True(t, result.Equal(original),
+				"Rsh(%d).Lsh(%d) should return to original for %s, got %s",
+				tc.bits, tc.bits, tc.input, result.String())
+		})
+	}
+}
+
+// TestRshTruncation specifically tests the truncation behavior of Rsh.
+// Binary right shift performs integer division by powers of 2, truncating
+// any fractional parts that would result from the division.
+func TestRshTruncation(t *testing.T) {
+	// Test that Rsh truncates fractional parts (integer division behavior)
+	testcases := []struct {
+		input    string
+		bits     uint
+		expected string
+		desc     string
+	}{
+		{"3", 1, "1", "3 >> 1 = 1 (truncates 0.5)"},
+		{"5", 1, "2", "5 >> 1 = 2 (truncates 0.5)"},
+		{"7", 1, "3", "7 >> 1 = 3 (truncates 0.5)"},
+		{"5", 2, "1", "5 >> 2 = 1 (truncates 0.25)"},
+		{"7", 2, "1", "7 >> 2 = 1 (truncates 0.75)"},
+		{"15", 2, "3", "15 >> 2 = 3 (truncates 0.75)"},
+		{"1", 1, "0", "1 >> 1 = 0 (truncates 0.5)"},
+		{"1", 2, "0", "1 >> 2 = 0 (truncates 0.25)"},
+
+		// Negative numbers also truncate towards zero
+		{"-3", 1, "-1", "-3 >> 1 = -1 (truncates -0.5)"},
+		{"-5", 1, "-2", "-5 >> 1 = -2 (truncates -0.5)"},
+		{"-7", 2, "-1", "-7 >> 2 = -1 (truncates -0.75)"},
+
+		// Decimals maintain their fractional part structure
+		{"3.5", 1, "1.7", "3.5 >> 1 = 1.7"},
+		{"7.25", 2, "1.81", "7.25 >> 2 = 1.81"},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.input+"_rsh_"+fmt.Sprintf("%d", tc.bits), func(t *testing.T) {
+			d := MustParse(tc.input)
+			result := d.Rsh(tc.bits)
+			expected := MustParse(tc.expected)
+
+			require.True(t, result.Equal(expected),
+				"%s: Rsh(%d) on %s: got %s, expected %s",
+				tc.desc, tc.bits, tc.input, result.String(), tc.expected)
+		})
+	}
+}

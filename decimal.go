@@ -905,6 +905,16 @@ func (d Decimal) Lsh(bits uint) Decimal {
 	return d
 }
 
+func (d Decimal) Rsh(bits uint) Decimal {
+	if d.coef.bigInt != nil {
+		d.coef.bigInt = d.coef.bigInt.Rsh(d.coef.bigInt, bits)
+	} else {
+		d.coef.u128 = d.coef.u128.Rsh(bits)
+	}
+
+	return d
+}
+
 // ShiftPointLeft shifts the decimal point left by n positions.
 // This is equivalent to multiplying the number by 10^n.
 // For example, 123.45.ShiftPointLeft(2) returns 12345
