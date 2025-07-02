@@ -2980,3 +2980,142 @@ func TestConversionHiLo(t *testing.T) {
 		})
 	}
 }
+
+func TestLsh(t *testing.T) {
+	testcases := []struct {
+		input    string
+		bits     uint
+		expected string
+	}{
+		// Zero shift - should return same value
+		{"123.45", 0, "123.45"},
+		{"0", 0, "0"},
+		{"-123.45", 0, "-123.45"},
+
+		// Basic shifts
+		{"1", 1, "2"},
+		{"1", 2, "4"},
+		{"1", 3, "8"},
+		{"2", 1, "4"},
+		{"2", 2, "8"},
+		{"5", 1, "10"},
+
+		// Decimal shifts
+		{"1.5", 1, "3"},
+		{"1.25", 2, "5"},
+		{"2.5", 1, "5"},
+		{"3.75", 2, "15"},
+
+		// Negative numbers
+		{"-1", 1, "-2"},
+		{"-1", 2, "-4"},
+		{"-2.5", 1, "-5"},
+		{"-3.75", 2, "-15"},
+
+		// Zero
+		{"0", 1, "0"},
+		{"0", 10, "0"},
+		{"0", 64, "0"},
+
+		// Small decimals
+		{"0.1", 1, "0.2"},
+		{"0.125", 3, "1"},
+		{"0.0625", 4, "1"},
+
+		// Larger shifts
+		{"1", 10, "1024"},
+		{"1", 16, "65536"},
+		{"3", 4, "48"},
+		{"7", 3, "56"},
+
+		// Mixed precision
+		{"1.234567", 1, "2.469134"},
+		{"0.5", 4, "8"},
+		{"0.25", 6, "16"},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.input+"_lsh_"+fmt.Sprintf("%d", tc.bits), func(t *testing.T) {
+			d := MustParse(tc.input)
+			result := d.Lsh(tc.bits)
+			expected := MustParse(tc.expected)
+
+			require.True(t, result.Equal(expected),
+				"Lsh(%d) on %s: got %s, expected %s",
+				tc.bits, tc.input, result.String(), tc.expected)
+		})
+	}
+}
+
+func TestLshLargeShifts(t *testing.T) {
+	// Test shifts that might overflow u128 to bigInt
+	testcases := []struct {
+		input string
+		bits  uint
+	}{
+		{"1", 64},
+		{"1", 100},
+		{"1", 127},
+		{"123", 50},
+		{"999999999999999999", 10},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.input+"_lsh_"+fmt.Sprintf("%d", tc.bits), func(t *testing.T) {
+			d := MustParse(tc.input)
+			result := d.Lsh(tc.bits)
+
+			// Verify the result is not zero (unless input was zero)
+			if !d.IsZero() {
+				require.False(t, result.IsZero(),
+					"Lsh should not produce zero for non-zero input")
+
+				// Verify the result is larger than the original
+				require.True(t, result.GreaterThan(d),
+					"Lsh should produce larger value for positive input")
+			}
+		})
+	}
+}
+
+func TestLshPreservesSignAndPrecision(t *testing.T) {
+	testcases := []struct {
+		input string
+		bits  uint
+	}{
+		{"123.456789", 1},
+		{"-987.654321", 2},
+		{"0.123456789012345678", 3},
+		{"-0.987654321098765432", 1},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.input+"_lsh_"+fmt.Sprintf("%d", tc.bits), func(t *testing.T) {
+			d := MustParse(tc.input)
+			result := d.Lsh(tc.bits)
+
+			// Check sign preservation
+			require.Equal(t, d.IsNeg(), result.IsNeg(),
+				"Lsh should preserve sign")
+
+			// Check precision preservation
+			require.Equal(t, d.Prec(), result.Prec(),
+				"Lsh should preserve precision")
+		})
+	}
+}
+
+func TestLshZero(t *testing.T) {
+	zero := MustParse("0")
+
+	// Test various shifts on zero
+	shifts := []uint{0, 1, 2, 10, 32, 64, 100}
+
+	for _, bits := range shifts {
+		t.Run(fmt.Sprintf("zero_lsh_%d", bits), func(t *testing.T) {
+			result := zero.Lsh(bits)
+			require.True(t, result.IsZero(),
+				"Lsh on zero should always return zero")
+		})
+	}
+}

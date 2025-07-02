@@ -891,6 +891,20 @@ func (d Decimal) rescale(prec uint8) Decimal {
 	return Decimal{neg: dTrim.neg, coef: coef, prec: prec}
 }
 
+func (d Decimal) Lsh(bits uint) Decimal {
+	if bits == 0 {
+		return d
+	}
+
+	if d.coef.bigInt != nil {
+		d.coef.bigInt = d.coef.bigInt.Lsh(d.coef.bigInt, bits)
+	} else {
+		d.coef.u128 = d.coef.u128.Lsh(bits)
+	}
+
+	return d
+}
+
 // ShiftPointLeft shifts the decimal point left by n positions.
 // This is equivalent to multiplying the number by 10^n.
 // For example, 123.45.ShiftPointLeft(2) returns 12345
